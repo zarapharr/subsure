@@ -56,6 +56,7 @@ async function authorizeCredentials(rawCredentials: unknown) {
 }
 
 export const authConfig = {
+  secret: env.NEXTAUTH_SECRET,
   // Credentials provider in Auth.js v5 requires JWT sessions.
   session: { strategy: "jwt" },
   providers: [
