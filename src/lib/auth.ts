@@ -1,10 +1,7 @@
 import NextAuth from "next-auth";
 import type { NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import { eq } from "drizzle-orm";
 import { z } from "zod";
-import { db } from "@/db/client";
-import { users } from "@/db/schema";
 import { env } from "@/env";
 
 const CredentialsSchema = z.object({
@@ -23,36 +20,12 @@ async function authorizeCredentials(rawCredentials: unknown) {
   // Scaffold guardrail: do not accept credentials unless demo values are configured.
   if (!demoEmail || !demoPassword) return null;
   if (email !== demoEmail || password !== demoPassword) return null;
-
-  const existing = await db
-    .select({
-      id: users.id,
-      name: users.name,
-      email: users.email,
-      image: users.image,
-    })
-    .from(users)
-    .where(eq(users.email, email))
-    .limit(1);
-
-  const existingUser = existing[0];
-  if (existingUser) return existingUser;
-
-  const inserted = await db
-    .insert(users)
-    .values({
-      email,
-      name: email.split("@")[0],
-    })
-    .returning({
-      id: users.id,
-      name: users.name,
-      email: users.email,
-      image: users.image,
-    });
-
-  const insertedUser = inserted[0];
-  return insertedUser ?? null;
+  return {
+    id: "demo-user",
+    name: "Demo User",
+    email: demoEmail,
+    image: null,
+  };
 }
 
 export const authConfig = {

@@ -14,5 +14,26 @@ export async function resolveAuthedUserId(): Promise<string | null> {
     .where(eq(users.email, email))
     .limit(1);
 
-  return result[0]?.id ?? null;
+  const existingUserId = result[0]?.id;
+  if (existingUserId) return existingUserId;
+
+  const inserted = await db
+    .insert(users)
+    .values({
+      email,
+      name: session.user?.name ?? email.split("@")[0],
+    })
+    .onConflictDoNothing({ target: users.email })
+    .returning({ id: users.id });
+
+  const insertedUserId = inserted[0]?.id;
+  if (insertedUserId) return insertedUserId;
+
+  const retried = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.email, email))
+    .limit(1);
+
+  return retried[0]?.id ?? null;
 }
