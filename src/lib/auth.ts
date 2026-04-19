@@ -58,7 +58,8 @@ async function authorizeCredentials(rawCredentials: unknown) {
 
 export const authConfig = {
   adapter: DrizzleAdapter(db),
-  session: { strategy: "database" },
+  // Credentials provider in Auth.js v5 requires JWT sessions.
+  session: { strategy: "jwt" },
   providers: [
     Credentials({
       credentials: {
