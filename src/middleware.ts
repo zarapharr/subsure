@@ -23,5 +23,6 @@ export default function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api/auth|_next/static|_next/image|favicon.ico).*)"],
+  // API routes should return JSON/HTTP auth responses, not page redirects.
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
 };
