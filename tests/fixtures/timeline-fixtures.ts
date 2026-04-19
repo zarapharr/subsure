@@ -1,0 +1,78 @@
+import type { ValidationCard } from "@/lib/validation-queue";
+
+export const TIMELINE_EDGE_CASE_FIXTURES: ValidationCard[] = [
+  {
+    id: "card-month-end",
+    merchant: "Month End Streaming",
+    amountCents: 1599,
+    cadence: "monthly",
+    lastChargedAt: "2026-01-31",
+    confidenceScore: 0.96,
+    accountLabel: "Visa",
+    recommendation: "keep",
+    recommendationReason: {
+      summary: "Stable monthly signal.",
+      evidence: ["End-of-month billing pattern is consistent."],
+      confidenceNote: "High confidence.",
+    },
+    transactionHistory: [],
+  },
+  {
+    id: "card-duplicate",
+    merchant: "Duplicate Music",
+    amountCents: 1099,
+    cadence: "monthly",
+    lastChargedAt: "2026-04-10",
+    confidenceScore: 0.95,
+    accountLabel: "Mastercard",
+    recommendation: "duplicate",
+    recommendationReason: {
+      summary: "Likely duplicate subscription record.",
+      evidence: ["Matching charge appears on another card."],
+      confidenceNote: "Requires merge review.",
+    },
+    transactionHistory: [],
+    duplicateMergeTargets: [
+      {
+        cardId: "card-duplicate-target",
+        merchant: "Duplicate Music",
+        accountLabel: "Mastercard",
+        amountCents: 1099,
+        lastChargedAt: "2026-04-11",
+        reason: "Same merchant and amount.",
+      },
+    ],
+  },
+  {
+    id: "card-annual-leap",
+    merchant: "Leap Day Cloud",
+    amountCents: 7999,
+    cadence: "annual",
+    lastChargedAt: "2024-02-29",
+    confidenceScore: 0.9,
+    accountLabel: "Amex",
+    recommendation: "review_later",
+    recommendationReason: {
+      summary: "Needs manual check before renewal.",
+      evidence: ["Annual cadence with leap-day anchor."],
+      confidenceNote: "Moderate confidence.",
+    },
+    transactionHistory: [],
+  },
+  {
+    id: "card-irregular-cadence",
+    merchant: "Irregular Utility",
+    amountCents: 4500,
+    cadence: "monthly",
+    lastChargedAt: "2026-04-01",
+    confidenceScore: 0.7,
+    accountLabel: "Checking",
+    recommendation: "review_later",
+    recommendationReason: {
+      summary: "Upstream cadence parsing may be unreliable.",
+      evidence: ["This fixture is cast to emulate unsupported cadence values."],
+      confidenceNote: "Low confidence.",
+    },
+    transactionHistory: [],
+  },
+];

@@ -6,6 +6,17 @@ Status: draft for SUB-2 (scaffold). Expect this to grow as follow-up tickets lan
 
 SubSure is a subscription _validation_ product: the user must explicitly decide what to do with each detected recurring charge (keep, cancel, downgrade, review later, not-mine, duplicate). See the PRD at `/Users/eric_pharr/Projects/SubSure/Subsure_PRD_v01.md` for product details.
 
+CEO product locks from PRD §27 (approved April 18, 2026) are treated as architectural constraints:
+
+- consumer-only MVP (no SMB-specific modeling in v1)
+- calm, pragmatic, non-judgmental tone (no shame framing in UX copy)
+- cancellation assistance deferred (MVP provides decision support + cancel path visibility, not managed cancellation)
+- web-first with first-class mobile-responsive UX
+- manual entry present but explicitly secondary to connected ingestion
+- email-first reminder channel for MVP
+- recommendation engine can be moderately opinionated, but every recommendation must expose user-visible reasoning
+- no dark patterns
+
 The technical surface area for MVP is:
 
 - account linking + transaction ingestion (Plaid)
@@ -49,20 +60,32 @@ Baseline comes from PRD §26. Any deviation is explicit below.
 
 ### Auth — Auth.js (NextAuth v5) with Drizzle adapter
 
-- Battle-tested, session model lands in Postgres via `@auth/drizzle-adapter`.
+- **Decision:** use Auth.js as the auth framework, backed by Postgres via `@auth/drizzle-adapter`.
+- **Provider plan:** MVP production providers are email magic link + Google OAuth. The currently implemented Credentials provider is scaffold-only for local/dev smoke testing and is gated by explicit demo env vars.
 - Session strategy: **database** (not JWT). We want server-side revocation for `Sign out everywhere` and Plaid token ties to sessions later.
-- This ticket ships route stubs + schema tables. SUB auth ticket wires providers (email magic link + Google).
+- Alternatives considered:
+  1. Clerk — faster out-of-the-box auth UI, but higher vendor lock-in and less control over schema/session data in our own DB.
+  2. Supabase Auth — strong Postgres affinity, but duplicates stack responsibilities since this project already standardizes on Neon + Drizzle.
+  3. Hand-rolled auth — maximum control, but unnecessary security/maintenance risk for MVP timeline.
 
 ### Background jobs — Vercel Cron + DB-backed job table (deferred)
 
 - **Flip from a dedicated worker (BullMQ, Inngest, Temporal).**
 - MVP cadence (hourly Plaid refresh, daily reminder sweep) fits Vercel Cron + a `jobs` table with idempotency keys.
 - Revisit when either (a) per-user job volume exceeds cron granularity, or (b) detection engine needs fan-out.
+- SUB-41 landed the first reminder-delivery persistence layer (`reminder_delivery`, `reminder_delivery_attempt`) plus retry/backoff/idempotency pipeline logic in `src/lib/reminder-delivery-pipeline.ts`.
 
-### Plaid — `plaid-node` SDK (deferred wiring)
+### Plaid — `plaid-node` SDK (SUB-4 delivered on Dev tier)
 
-- MVP aggregator per PRD. Env slots reserved: `PLAID_CLIENT_ID`, `PLAID_SECRET`, `PLAID_ENV`.
-- Actual integration ships in SUB Plaid ticket.
+- Integration now wired for sandbox/development tier end-to-end:
+  - Link token creation
+  - public token exchange
+  - account persistence (`financial_account`)
+  - transaction ingestion (`transaction`) via `/transactions/sync` cursor
+  - scheduled refresh endpoint (`/api/cron/plaid-refresh`)
+  - webhook handling for re-auth/error state (`/api/plaid/webhook`)
+- Production cutover is env-driven only through `PLAID_ENV`; no code changes required for later switch.
+- Manual entry remains available as fallback and is treated as secondary to connected ingestion.
 
 ### Analytics — PostHog
 
@@ -111,7 +134,7 @@ See `README.md` §Folder layout. High-level:
 
 ```
 src/app       routes (UI + API) — App Router
-src/lib       shared server/client code (auth, plaid client later, etc.)
+src/lib       shared server/client code (auth, plaid integration, etc.)
 src/db        drizzle schema, client, migrations
 src/env.ts    zod-validated env
 tests/        vitest
@@ -122,12 +145,13 @@ tests/        vitest
 
 Auth.js tables: `user`, `account`, `session`, `verificationToken` (verbatim adapter shape).
 
-Domain stubs in this ticket:
+Domain tables now in place:
 
 - `financial_account` — linked Plaid accounts.
+- `plaid_item` — per-item access token, sync cursor, and re-auth/error state.
+- `transaction` — normalized Plaid transactions keyed by `plaid_transaction_id`.
 - `subscription_candidate` — detected recurring charge.
-
-The full product schema (transactions, validation_decision, alert, savings_event) lands in the Plaid + detection tickets so shape follows real queries, not speculation.
+- `validation_decision` and reminder-delivery tables are also shipped from related tickets.
 
 ## 6. Deployment Flow
 
@@ -135,10 +159,9 @@ The full product schema (transactions, validation_decision, alert, savings_event
 2. Vercel builds preview deploy against the Neon preview branch for that git branch.
 3. Reviewer approves, merges to `main`.
 4. Vercel deploys `main` to prod, pointed at the Neon prod branch.
-5. Migrations run via the `db:migrate` script as a Vercel build command (to be wired in the Plaid ticket once we have real migrations beyond the scaffold).
+5. Migrations run via the `db:migrate` script as a Vercel build command.
 
 ## 7. Open architectural questions
 
 - Session strategy long-term: do we keep database sessions or cut to JWT once auth is mature? Revisit when multi-device concerns appear.
 - Detection engine: pure SQL vs offline batch (Node worker) vs future ML step. Decision in the detection ticket, driven by first-pass precision/recall numbers.
-- Mobile-first vs web-first (PRD open question §27). Current scaffold is web. Mobile stays a PWA at minimum.

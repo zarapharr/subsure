@@ -16,19 +16,23 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "eval:subscriptions": "tsx scripts/evaluate-subscription-fixtures.ts",
+    "verify:launch": "tsx scripts/launch-verification-check.ts",
+    "verify:launch:mock": "tsx scripts/launch-verification-check.ts --mock-mode",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/db/migrate.ts",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
+    "@auth/drizzle-adapter": "1.7.2",
+    "drizzle-orm": "0.33.0",
     "next": "14.2.15",
     "next-auth": "5.0.0-beta.20",
-    "@auth/drizzle-adapter": "1.7.2",
+    "plaid": "^19.0.0",
+    "postgres": "3.4.4",
     "react": "18.3.1",
     "react-dom": "18.3.1",
-    "drizzle-orm": "0.33.0",
-    "postgres": "3.4.4",
     "zod": "3.23.8"
   },
   "devDependencies": {

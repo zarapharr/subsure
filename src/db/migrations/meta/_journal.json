@@ -8,6 +8,48 @@
       "when": 1776531689801,
       "tag": "0000_new_piledriver",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1776544752942,
+      "tag": "0001_fair_klaw",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1776547384347,
+      "tag": "0002_wealthy_psynapse",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1776547841000,
+      "tag": "0003_flat_bloodstorm",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1776550503014,
+      "tag": "0004_sour_boomerang",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1776550866327,
+      "tag": "0005_glamorous_raza",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1776551300000,
+      "tag": "0006_tan_makkari",
+      "breakpoints": true
     }
   ]
 }
