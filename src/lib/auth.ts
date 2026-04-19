@@ -1,6 +1,5 @@
 import NextAuth from "next-auth";
 import type { NextAuthConfig } from "next-auth";
-import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import Credentials from "next-auth/providers/credentials";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
@@ -57,7 +56,6 @@ async function authorizeCredentials(rawCredentials: unknown) {
 }
 
 export const authConfig = {
-  adapter: DrizzleAdapter(db),
   // Credentials provider in Auth.js v5 requires JWT sessions.
   session: { strategy: "jwt" },
   providers: [
